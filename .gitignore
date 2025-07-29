@@ -13,8 +13,8 @@
 # testing
 /coverage
 
-#libs
-/firebase
+#libs firebase özel kısım
+/libs/firebase.ts
 
 # next.js
 /.next/
