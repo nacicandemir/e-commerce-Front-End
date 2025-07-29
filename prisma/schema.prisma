@@ -1,0 +1,91 @@
+// MongoDB bağlantısı
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Prisma client oluşturucu
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Kullanıcı rolleri
+enum Role {
+  USER
+  ADMIN
+}
+
+// Kullanıcı Modeli
+model User {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  name           String?
+  email          String?   @unique
+  emailVerified  DateTime?
+  image          String?
+  hashedPassword String?
+  createdAt      DateTime  @default(now())
+  updateAt       DateTime  @updatedAt
+  role           Role      @default(USER)
+
+  accounts       Account[]
+  reviews        Review[]
+}
+
+// Giriş hesapları (OAuth vs.)
+model Account {
+  id                 String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String  @db.ObjectId
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.String
+  access_token       String?  @db.String
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.String
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// Ürün Modeli (Trendyol JSON formatına göre uyarlanmış)
+model Product{
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  externalId    Int       @unique
+  name          String
+  description   String
+  price         Float
+  brand         String
+  category      String
+  categorySlug  String
+  categoryId    String
+  inStock       Boolean
+  image         String
+  url           String?
+  reviews       Review[]
+}
+
+// Ürün Yorumları
+model Review {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String    @db.ObjectId
+  productId    String    @db.ObjectId
+  rating       String
+  comment      String
+  createdDate  DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+model Order {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String      @db.ObjectId
+  createdAt   DateTime    @default(now())
+  totalPrice  Float
+  items       Json
+}
